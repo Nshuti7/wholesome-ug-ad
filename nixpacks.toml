@@ -1,0 +1,8 @@
+[phases.setup]
+packages = ["nodejs", "pnpm"]
+
+[phases.build]
+commands = ["pnpm install", "pnpm build"]
+
+[phases.start]
+command = "pnpm start"
