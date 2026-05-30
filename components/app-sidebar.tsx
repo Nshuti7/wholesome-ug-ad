@@ -33,6 +33,7 @@ import {
   IconCalendar,
   IconMessageCircle,
   IconBinoculars,
+  IconBuilding,
 } from "@tabler/icons-react";
 import { getMe } from "@/services/auth";
 
@@ -55,6 +56,7 @@ const navConnect = [
 ];
 
 const navSecondary = [
+  { title: "Company", url: "/company", icon: IconBuilding },
   { title: "Settings", url: "/settings", icon: IconSettings },
   { title: "Profile", url: "/profile", icon: IconUser },
   { title: "Revalidate", url: "/revalidate", icon: IconRefresh },
