@@ -400,9 +400,6 @@ export default function ToursPage() {
   // wrap create to close dialog
   const handleCreate = async (data: TourFormData) => {
     try {
-      // Validate data before sending
-      console.log("Creating tour with data:", data);
-      
       // Check required fields
       if (!data.title || !data.description) {
         toast.error("Title and description are required");
