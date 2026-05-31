@@ -52,6 +52,11 @@ const PARKS = [
   "Rwenzori",
 ];
 
+// Keep in sync with backend models/Experience.js enums.
+const CURRENCIES = ["USD", "EUR", "GBP"];
+const PRICE_UNITS = ["per person", "per permit", "per group"];
+const DIFFICULTIES = ["Easy", "Moderate", "Challenging", "Strenuous"];
+
 interface Experience {
   _id: string;
   title: string;
@@ -63,6 +68,16 @@ interface Experience {
   coverImage: { url: string; cloudinaryId: string };
   additionalImages: { url: string; cloudinaryId: string }[];
   featured: boolean;
+  // Pricing & logistics (optional — older records pre-date these).
+  price?: number;
+  currency?: string;
+  priceUnit?: string;
+  difficulty?: string;
+  bestTime?: string;
+  minAge?: number;
+  groupSize?: string;
+  included?: string[];
+  whatToBring?: string[];
   createdAt: string;
 }
 
@@ -74,6 +89,16 @@ interface ExperienceFormData {
   parks: string[];
   highlights: string[];
   featured: boolean;
+  // Numbers are kept as strings while editing; converted in transformFormData.
+  price: string;
+  currency: string;
+  priceUnit: string;
+  difficulty: string;
+  bestTime: string;
+  minAge: string;
+  groupSize: string;
+  included: string[];
+  whatToBring: string[];
   coverImage: File | null;
   additionalImages: File[];
 }
@@ -86,6 +111,15 @@ const defaultForm: ExperienceFormData = {
   parks: [],
   highlights: [],
   featured: false,
+  price: "",
+  currency: "USD",
+  priceUnit: "per person",
+  difficulty: "",
+  bestTime: "",
+  minAge: "",
+  groupSize: "",
+  included: [],
+  whatToBring: [],
   coverImage: null,
   additionalImages: [],
 };
@@ -103,10 +137,14 @@ function ExperienceForm({
 }) {
   const [form, setForm] = useState<ExperienceFormData>(defaultValues);
   const [highlightInput, setHighlightInput] = useState("");
+  const [includedInput, setIncludedInput] = useState("");
+  const [bringInput, setBringInput] = useState("");
 
   React.useEffect(() => {
     setForm(defaultValues);
     setHighlightInput("");
+    setIncludedInput("");
+    setBringInput("");
   }, [defaultValues]);
 
   const togglePark = (park: string) => {
@@ -118,16 +156,17 @@ function ExperienceForm({
     }));
   };
 
-  const addHighlight = () => {
-    const val = highlightInput.trim();
-    if (val && !form.highlights.includes(val)) {
-      setForm((prev) => ({ ...prev, highlights: [...prev.highlights, val] }));
-      setHighlightInput("");
+  // Generic add/remove for the string-array tag fields (highlights, included, whatToBring).
+  type TagField = "highlights" | "included" | "whatToBring";
+  const addTag = (field: TagField, value: string, reset: () => void) => {
+    const val = value.trim();
+    if (val && !form[field].includes(val)) {
+      setForm((prev) => ({ ...prev, [field]: [...prev[field], val] }));
+      reset();
     }
   };
-
-  const removeHighlight = (h: string) => {
-    setForm((prev) => ({ ...prev, highlights: prev.highlights.filter((x) => x !== h) }));
+  const removeTag = (field: TagField, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: prev[field].filter((x) => x !== value) }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,15 +229,116 @@ function ExperienceForm({
             value={highlightInput}
             onChange={(e) => setHighlightInput(e.target.value)}
             placeholder="Add a highlight"
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHighlight(); } }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag("highlights", highlightInput, () => setHighlightInput("")); } }}
           />
-          <Button type="button" variant="outline" onClick={addHighlight}>Add</Button>
+          <Button type="button" variant="outline" onClick={() => addTag("highlights", highlightInput, () => setHighlightInput(""))}>Add</Button>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           {form.highlights.map((h) => (
             <Badge key={h} variant="secondary" className="gap-1">
               {h}
-              <span className="cursor-pointer text-xs" onClick={() => removeHighlight(h)}>×</span>
+              <span className="cursor-pointer text-xs" onClick={() => removeTag("highlights", h)}>×</span>
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Price</Label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="e.g. 700"
+            value={form.price}
+            onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Currency</Label>
+          <Select value={form.currency} onValueChange={(v) => setForm((p) => ({ ...p, currency: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Price unit</Label>
+          <Select value={form.priceUnit} onValueChange={(v) => setForm((p) => ({ ...p, priceUnit: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PRICE_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Logistics */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Difficulty</Label>
+          <Select value={form.difficulty} onValueChange={(v) => setForm((p) => ({ ...p, difficulty: v }))}>
+            <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
+            <SelectContent>
+              {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Best time</Label>
+          <Input placeholder="e.g. Jun–Sep, year-round" value={form.bestTime} onChange={(e) => setForm((p) => ({ ...p, bestTime: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label>Minimum age</Label>
+          <Input type="number" min={0} placeholder="e.g. 15" value={form.minAge} onChange={(e) => setForm((p) => ({ ...p, minAge: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label>Group size</Label>
+          <Input placeholder="e.g. Max 8 people" value={form.groupSize} onChange={(e) => setForm((p) => ({ ...p, groupSize: e.target.value }))} />
+        </div>
+      </div>
+
+      {/* What's included */}
+      <div className="space-y-2">
+        <Label>What's included</Label>
+        <div className="flex gap-2">
+          <Input
+            value={includedInput}
+            onChange={(e) => setIncludedInput(e.target.value)}
+            placeholder="Add an included item"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag("included", includedInput, () => setIncludedInput("")); } }}
+          />
+          <Button type="button" variant="outline" onClick={() => addTag("included", includedInput, () => setIncludedInput(""))}>Add</Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {form.included.map((h) => (
+            <Badge key={h} variant="secondary" className="gap-1">
+              {h}
+              <span className="cursor-pointer text-xs" onClick={() => removeTag("included", h)}>×</span>
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* What to bring */}
+      <div className="space-y-2">
+        <Label>What to bring</Label>
+        <div className="flex gap-2">
+          <Input
+            value={bringInput}
+            onChange={(e) => setBringInput(e.target.value)}
+            placeholder="Add an item to bring"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag("whatToBring", bringInput, () => setBringInput("")); } }}
+          />
+          <Button type="button" variant="outline" onClick={() => addTag("whatToBring", bringInput, () => setBringInput(""))}>Add</Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {form.whatToBring.map((h) => (
+            <Badge key={h} variant="secondary" className="gap-1">
+              {h}
+              <span className="cursor-pointer text-xs" onClick={() => removeTag("whatToBring", h)}>×</span>
             </Badge>
           ))}
         </div>
@@ -251,6 +391,17 @@ export default function ExperiencesPage() {
         fd.append("featured", String(data.featured));
         data.parks.forEach((p) => fd.append("parks", p));
         data.highlights.forEach((h) => fd.append("highlights", h));
+        // Pricing & logistics. Backend coerces "" → undefined for numbers;
+        // difficulty is an enum with no default, so only send it when set.
+        fd.append("price", data.price);
+        fd.append("currency", data.currency);
+        fd.append("priceUnit", data.priceUnit);
+        if (data.difficulty) fd.append("difficulty", data.difficulty);
+        fd.append("bestTime", data.bestTime);
+        fd.append("minAge", data.minAge);
+        fd.append("groupSize", data.groupSize);
+        data.included.forEach((i) => fd.append("included", i));
+        data.whatToBring.forEach((i) => fd.append("whatToBring", i));
         if (data.coverImage) fd.append("coverImage", data.coverImage);
         data.additionalImages.forEach((img) => fd.append("additionalImages", img));
         return fd;
@@ -372,6 +523,15 @@ export default function ExperiencesPage() {
                 parks: editing.parks || [],
                 highlights: editing.highlights || [],
                 featured: editing.featured,
+                price: editing.price?.toString() ?? "",
+                currency: editing.currency || "USD",
+                priceUnit: editing.priceUnit || "per person",
+                difficulty: editing.difficulty || "",
+                bestTime: editing.bestTime || "",
+                minAge: editing.minAge?.toString() ?? "",
+                groupSize: editing.groupSize || "",
+                included: editing.included || [],
+                whatToBring: editing.whatToBring || [],
                 coverImage: null,
                 additionalImages: [],
               }}

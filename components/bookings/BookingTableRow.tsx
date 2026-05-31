@@ -103,11 +103,25 @@ export const BookingTableRow: React.FC<Props> = ({
             <p className="font-medium text-sm">{booking.preferredTour.title}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              <span>{booking.preferredTour.daysCount}d/{booking.preferredTour.nightsCount}n</span>
+              <span>Tour · {booking.preferredTour.daysCount}d/{booking.preferredTour.nightsCount}n</span>
             </div>
           </div>
+        ) : booking.preferredExperience ? (
+          <div className="space-y-1">
+            <p className="font-medium text-sm">{booking.preferredExperience.title}</p>
+            <span className="text-xs text-muted-foreground">
+              Experience{booking.preferredExperience.category ? ` · ${booking.preferredExperience.category}` : ""}
+            </span>
+          </div>
+        ) : booking.preferredDestination ? (
+          <div className="space-y-1">
+            <p className="font-medium text-sm">{booking.preferredDestination.name}</p>
+            <span className="text-xs text-muted-foreground">
+              Destination{booking.preferredDestination.region ? ` · ${booking.preferredDestination.region}` : ""}
+            </span>
+          </div>
         ) : (
-          <span className="text-sm text-muted-foreground">No tour selected</span>
+          <span className="text-sm text-muted-foreground">No selection</span>
         )}
       </TableCell>
       

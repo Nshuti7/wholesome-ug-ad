@@ -13,6 +13,16 @@ export interface Booking {
     description?: string;
     backgroundImage?: { url: string; cloudinaryId: string };
   };
+  preferredExperience?: {
+    _id: string;
+    title: string;
+    category?: string;
+  };
+  preferredDestination?: {
+    _id: string;
+    name: string;
+    region?: string;
+  };
   travelDate: string;
   numberOfPeople: number;
   specialRequests?: string;
