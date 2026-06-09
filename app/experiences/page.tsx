@@ -27,29 +27,27 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// Keep in sync with backend models/Experience.js EXPERIENCE_CATEGORIES.
 const CATEGORIES = [
+  "Cultural Experience",
+  "Adventure",
+  "Nature",
+  "Photography",
+  "Art & Craft",
+  "Workshop",
+  "City & Markets",
+  "Food & Drink",
+  "Music & Performance",
+  "Scenic",
+  "Community",
+  // Legacy safari values — retained so older experiences still validate.
   "Gorilla Trekking",
   "Chimpanzee Tracking",
   "Bird Watching",
   "Boat Safari",
   "Nature Walk",
-  "Cultural Experience",
-  "Adventure",
-  "Photography",
   "Scenic Drive",
   "Conservation Tour",
-];
-
-const PARKS = [
-  "Bwindi Impenetrable",
-  "Queen Elizabeth",
-  "Murchison Falls",
-  "Kidepo Valley",
-  "Lake Mburo",
-  "Mount Elgon",
-  "Kibale",
-  "Semuliki",
-  "Rwenzori",
 ];
 
 // Keep in sync with backend models/Experience.js enums.
@@ -136,28 +134,21 @@ function ExperienceForm({
   submitButtonText?: string;
 }) {
   const [form, setForm] = useState<ExperienceFormData>(defaultValues);
+  const [parkInput, setParkInput] = useState("");
   const [highlightInput, setHighlightInput] = useState("");
   const [includedInput, setIncludedInput] = useState("");
   const [bringInput, setBringInput] = useState("");
 
   React.useEffect(() => {
     setForm(defaultValues);
+    setParkInput("");
     setHighlightInput("");
     setIncludedInput("");
     setBringInput("");
   }, [defaultValues]);
 
-  const togglePark = (park: string) => {
-    setForm((prev) => ({
-      ...prev,
-      parks: prev.parks.includes(park)
-        ? prev.parks.filter((p) => p !== park)
-        : [...prev.parks, park],
-    }));
-  };
-
-  // Generic add/remove for the string-array tag fields (highlights, included, whatToBring).
-  type TagField = "highlights" | "included" | "whatToBring";
+  // Generic add/remove for the string-array tag fields.
+  type TagField = "parks" | "highlights" | "included" | "whatToBring";
   const addTag = (field: TagField, value: string, reset: () => void) => {
     const val = value.trim();
     if (val && !form[field].includes(val)) {
@@ -207,16 +198,21 @@ function ExperienceForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Parks</Label>
-        <div className="flex flex-wrap gap-2">
-          {PARKS.map((park) => (
-            <Badge
-              key={park}
-              variant={form.parks.includes(park) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => togglePark(park)}
-            >
-              {park}
+        <Label>Regions / places</Label>
+        <div className="flex gap-2">
+          <Input
+            value={parkInput}
+            onChange={(e) => setParkInput(e.target.value)}
+            placeholder="Add a region or place"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag("parks", parkInput, () => setParkInput("")); } }}
+          />
+          <Button type="button" variant="outline" onClick={() => addTag("parks", parkInput, () => setParkInput(""))}>Add</Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {form.parks.map((p) => (
+            <Badge key={p} variant="secondary" className="gap-1">
+              {p}
+              <span className="cursor-pointer text-xs" onClick={() => removeTag("parks", p)}>×</span>
             </Badge>
           ))}
         </div>

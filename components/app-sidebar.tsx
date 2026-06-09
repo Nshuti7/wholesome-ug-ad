@@ -34,6 +34,8 @@ import {
   IconMessageCircle,
   IconBinoculars,
   IconBuilding,
+  IconPalette,
+  IconBook,
 } from "@tabler/icons-react";
 import { getMe } from "@/services/auth";
 
@@ -42,6 +44,8 @@ const navMain = [
   { title: "Destinations", url: "/destinations", icon: IconWorld },
   { title: "Itineraries", url: "/itineraries", icon: IconLocation },
   { title: "Experiences", url: "/experiences", icon: IconBinoculars },
+  { title: "Art", url: "/art", icon: IconPalette },
+  { title: "Storytelling", url: "/storytelling", icon: IconBook },
   { title: "Testimonials", url: "/testimonials", icon: IconMessageCircle },
   { title: "Bookings", url: "/bookings", icon: IconCalendar },
   { title: "Gallery", url: "/gallery", icon: IconPhoto },

@@ -75,6 +75,18 @@ const REVALIDATION_PATHS: RevalidationPath[] = [
     priority: "high",
   },
   {
+    path: "/art",
+    label: "Art",
+    description: "African art gallery",
+    priority: "high",
+  },
+  {
+    path: "/storytelling",
+    label: "Storytelling",
+    description: "Storytelling selected work gallery",
+    priority: "high",
+  },
+  {
     path: "/tours",
     label: "Tours",
     description: "All tours listing",
