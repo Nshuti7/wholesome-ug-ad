@@ -1,5 +1,7 @@
 // lib/destinations/schema.ts
 import * as z from "zod";
+import { toast } from "sonner";
+import api from "@/utils/api";
 import type { FormField } from "@/components/ui/reusable-form";
 
 // --- Constants for selects ---
@@ -137,6 +139,37 @@ export const destinationFormFields: FormField[] = [
     label: "Google Maps Link",
     type: "text",
     required: true,
+  },
+  {
+    name: "extractCoordinates",
+    label: "",
+    type: "button",
+    buttonText: "Get coordinates from map link",
+    variant: "outline",
+    description:
+      "Reads latitude & longitude from the Google Maps link above (share link, place URL, or embed).",
+    onClick: async (form) => {
+      const url = (form.getValues("googleMapsLink") || "").toString().trim();
+      if (!url) {
+        toast.error("Paste a Google Maps link first.");
+        return;
+      }
+      try {
+        const res = await api.post("/destinations/extract-coordinates", { url });
+        const data = res.data?.data;
+        if (res.data?.success && data) {
+          form.setValue("latitude", data.latitude, { shouldValidate: true, shouldDirty: true });
+          form.setValue("longitude", data.longitude, { shouldValidate: true, shouldDirty: true });
+          toast.success(
+            `Coordinates filled: ${Number(data.latitude).toFixed(5)}, ${Number(data.longitude).toFixed(5)}`,
+          );
+        } else {
+          toast.error(res.data?.message || "Couldn't find coordinates in that link.");
+        }
+      } catch {
+        toast.error("Failed to extract coordinates. Check the link and try again.");
+      }
+    },
   },
   {
     name: "latitude",

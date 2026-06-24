@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm, FieldValues, Path, Controller } from "react-hook-form";
+import { useForm, FieldValues, Path, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,7 @@ export type FieldType =
   | "object"
   | "conditional"
   | "group"
+  | "button"
   | "separator"
   | "hidden";
 
@@ -228,6 +229,17 @@ export interface SeparatorField extends Omit<BaseField, "name"> {
   name?: string;
 }
 
+// A non-data action button rendered inline among the fields. Its onClick gets
+// the live form instance, so it can read other fields and setValue on them
+// (e.g. derive latitude/longitude from a pasted map link). Carries no value.
+export interface ButtonField extends Omit<BaseField, "name"> {
+  type: "button";
+  name?: string;
+  buttonText: string;
+  variant?: "default" | "outline" | "secondary" | "ghost";
+  onClick: (form: UseFormReturn<FieldValues>) => void | Promise<void>;
+}
+
 export interface HiddenField extends BaseField {
   type: "hidden";
   value: any;
@@ -252,6 +264,7 @@ export type FormField =
   | ObjectField
   | ConditionalField
   | GroupField
+  | ButtonField
   | SeparatorField
   | HiddenField;
 
@@ -269,6 +282,38 @@ export interface ReusableFormProps<T extends FieldValues> {
   mode?: "onChange" | "onBlur" | "onSubmit";
   onFormChange?: (data: Partial<T>) => void;
 }
+
+// Inline action button rendered among form fields (e.g. "derive coordinates").
+const ButtonFieldControl: React.FC<{
+  field: ButtonField;
+  form: UseFormReturn<FieldValues>;
+  disabled?: boolean;
+}> = ({ field, form, disabled }) => {
+  const [busy, setBusy] = React.useState(false);
+  return (
+    <div className={cn("flex flex-col gap-1", field.className)}>
+      <Button
+        type="button"
+        variant={field.variant || "outline"}
+        disabled={disabled || busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await field.onClick(form);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+        {field.buttonText}
+      </Button>
+      {field.description && (
+        <p className="text-sm text-muted-foreground">{field.description}</p>
+      )}
+    </div>
+  );
+};
 
 // File preview component
 const FilePreview: React.FC<{
@@ -611,6 +656,19 @@ export function ReusableForm<T extends FieldValues>({
             </div>
           )}
         </div>
+      );
+    }
+
+    // Handle inline action buttons (non-data, e.g. derive coordinates)
+    if (field.type === "button") {
+      const btnField = field as ButtonField;
+      return (
+        <ButtonFieldControl
+          key={field.name || `button-${index}`}
+          field={btnField}
+          form={form as unknown as UseFormReturn<FieldValues>}
+          disabled={isLoading}
+        />
       );
     }
 
@@ -1677,6 +1735,7 @@ export const createFormSchema = <T extends Record<string, any>>(
         return processField(condField.field);
       case "separator":
       case "hidden":
+      case "button":
         return z.any();
       default:
         fieldSchema = z.string();
