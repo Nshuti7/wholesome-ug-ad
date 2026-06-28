@@ -93,7 +93,7 @@ export const blogFormFields: FormField[] = [
     label: "Featured Image",
     type: "image",
     accept: "image/*",
-    maxSize: 5,
+    maxSize: 20,
     showPreview: true,
     required: true,
     description: "Upload a high-quality image that represents your blog post",

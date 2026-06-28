@@ -24,10 +24,10 @@ export function GalleryUploadForm({
       required: true,
       accept: "image/*",
       maxFiles: 10,
-      maxSize: 5,
+      maxSize: 20,
       showPreview: true,
       description:
-        "Select up to 10 images (max 5MB each). Supported formats: JPG, PNG, GIF, WebP",
+        "Select up to 10 images (max 20MB each). Supported formats: JPG, PNG, GIF, WebP",
     },
     {
       name: "description",

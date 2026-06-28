@@ -107,7 +107,7 @@ export const DestinationFormDialog: React.FC<Props> = ({
               <span className="text-sm font-medium">💡 Upload Tips:</span>
             </div>
             <ul className="text-xs text-amber-600 mt-1 space-y-1">
-              <li>• Use images smaller than 5MB each for faster uploads</li>
+              <li>• Use images smaller than 20MB each for faster uploads</li>
               <li>• Recommended formats: JPG, PNG, WebP</li>
               <li>• Ensure stable internet connection</li>
             </ul>

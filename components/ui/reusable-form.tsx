@@ -5,6 +5,7 @@ import * as React from "react";
 import { useForm, FieldValues, Path, Controller, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -1318,9 +1319,13 @@ export function ReusableForm<T extends FieldValues>({
                         const file = e.target.files?.[0];
                         if (file) {
                           const maxSize =
-                            (imageField.maxSize || 5) * 1024 * 1024;
+                            (imageField.maxSize || 20) * 1024 * 1024;
                           if (file.size <= maxSize) {
                             formField.onChange(file);
+                          } else {
+                            toast.error(
+                              `Image is too large (max ${imageField.maxSize || 20}MB).`,
+                            );
                           }
                         }
                       }}
@@ -1372,14 +1377,25 @@ export function ReusableForm<T extends FieldValues>({
                         onChange={(e) => {
                           const newImages = e.target.files;
                           if (newImages) {
-                            const maxSize =
-                              (multiImageField.maxSize || 5) * 1024 * 1024;
+                            const cap = multiImageField.maxSize || 20;
+                            const maxSize = cap * 1024 * 1024;
 
-                            let validImages = Array.from(newImages).filter(
+                            const picked = Array.from(newImages);
+                            let validImages = picked.filter(
                               (file) =>
                                 file.type.startsWith("image/") &&
                                 file.size <= maxSize
                             );
+                            const tooBig = picked.filter(
+                              (file) =>
+                                file.type.startsWith("image/") &&
+                                file.size > maxSize
+                            );
+                            if (tooBig.length) {
+                              toast.error(
+                                `${tooBig.length} image(s) skipped — over ${cap}MB each.`,
+                              );
+                            }
 
                             if (images.length + validImages.length > maxFiles) {
                               validImages = validImages.slice(

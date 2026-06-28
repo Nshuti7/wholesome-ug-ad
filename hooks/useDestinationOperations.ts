@@ -56,7 +56,7 @@ export function useDestinationOperations() {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         toast.error("Upload timed out. Please try again with smaller images or check your internet connection.");
       } else if (err.response?.status === 413) {
-        toast.error("Files are too large. Please use images smaller than 5MB each.");
+        toast.error("Files are too large. Please use images smaller than 20MB each.");
       } else {
         toast.error(err.response?.data?.message || err.message || "Failed to create destination");
       }
